@@ -1,37 +1,39 @@
 #include "monty.h"
 
-/*global_v glob_v;*/
+global_v global;
 
 /**
- * free_glov - frees global var
- * Return: nth
+ * free_glov - frees the global variables
+ *
+ * Return: no return
  */
 void free_glov(void)
 {
-	free_dlist(glob_v.head);
-	free(glob_v.buff);
-	fclose(glob_v.fd);
+	free_list(global.head);
+	free(global.buff);
+	fclose(global.fd);
 }
 
 /**
- * init_glov -initialize global var
+ * init_glov - initializes the global variables
+ *
  * @fd: file descriptor
- * Return: nth
+ * Return: no return
  */
 void init_glov(FILE *fd)
 {
-	glob_v lfo = 1;
-	glob_v.curr = 1;
-	glob_v.arg = NULL;
-	glob_v.head = NULL;
-	glob_v.fd = fd;
-	glob_v.buff = NULL;
+	global.lifo = 1;
+	global.curr = 1;
+	global.arg = NULL;
+	global.head = NULL;
+	global.fd = fd;
+	global.buff = NULL;
 }
 
 /**
- * check_file - check if file exists
- * @argc: arg count
- * @argv: arg vector
+ * check_file - checks if the file exists
+ * @argc: argument count
+ * @argv: argument vector
  * Return: file struct
  */
 FILE *check_file(int argc, char *argv[])
@@ -43,18 +45,21 @@ FILE *check_file(int argc, char *argv[])
 		dprintf(2, "USAGE: monty file\n");
 		exit(EXIT_FAILURE);
 	}
+
 	fd = fopen(argv[1], "r");
 
 	if (fd == NULL)
 	{
-		dprintf(2, "Error: can't oprn file %s\n", argv[1]);
+		dprintf(2, "Error: Can't open file %s\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
+
 	return (fd);
 }
 
 /**
- * main - entry point
+ * main - Entry point
+ *
  * @argc: arg count
  * @argv: arg vector
  * Return: 0
@@ -65,33 +70,29 @@ int main(int argc, char *argv[])
 	FILE *fd;
 	size_t sz = 256;
 	ssize_t numln = 0;
-	char *ln[2] = {NULL, NULL};
+	char *lines[2] = {NULL, NULL};
 
 	fd = check_file(argc, argv);
-
 	init_glov(fd);
-
-	numln = getline(&glob_v.buff, &sz, fd);
-
+	numln = getline(&global.buff, &sz, fd);
 	while (numln != -1)
 	{
-		ln[0] = _strtokn(glob_v.buff, "\t\n");
-		if (ln[0] && ln[0][0] != '#')
+		lines[0] = _strtokn(global.buff, " \t\n");
+		if (lines[0] && lines[0][0] != '#')
 		{
-			f = get_opc(ln[0]);
-
+			f = get_opc(lines[0]);
 			if (!f)
 			{
-				dprintf(2, "L%u: ", glob_v.curr);
-				dprintf(2, "unknown instuctn %s\n", ln[0]);
+				dprintf(2, "L%u: ", global.curr);
+				dprintf(2, "unknown instruction %s\n", lines[0]);
 				free_glov();
 				exit(EXIT_FAILURE);
 			}
-			glob_v.arg = _strtokn(NULL, "\t\n");
-			f(&glob_v.head, glob_v.curr);
+			global.arg = _strtokn(NULL, " \t\n");
+			f(&global.head, global.curr);
 		}
-		numln = getline(&glob_v.buff, &sz, fd);
-		glob_v.curr++;
+		numln = getline(&global.buff, &sz, fd);
+		global.curr++;
 	}
 
 	free_glov();
